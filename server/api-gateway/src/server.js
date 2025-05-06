@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 const corsOptions = {
     origin: [
       'http://localhost:3000', // for development
-      'https://abdul-canva-clone.netlify.app/' // your production domain
+      'https://resilient-gaufre-cbf0c2.netlify.app' // your production domain
     ],
     credentials: true,
     optionsSuccessStatus: 200
