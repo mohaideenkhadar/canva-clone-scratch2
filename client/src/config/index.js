@@ -1,4 +1,4 @@
-const {
+import {
   Youtube,
   Image,
   Palette,
@@ -9,7 +9,7 @@ const {
   Sparkles,
   Wand2,
   Upload,
-} = require("lucide-react");
+} from "lucide-react";
 
 export const designTypes = [
   {
@@ -121,28 +121,28 @@ export const textPresets = [
     text: "Add a heading",
     fontSize: 36,
     fontWeight: "bold",
-    fontFamily: "Inter, sans-serid",
+    fontFamily: "Inter, sans-serif",
   },
   {
     name: "Subheading",
     text: "Add a subheading",
     fontSize: 24,
     fontWeight: "bold",
-    fontFamily: "Inter, sans-serid",
+    fontFamily: "Inter, sans-serif",
   },
   {
     name: "Body Text",
     text: "Add a little bit of body text",
     fontSize: 16,
     fontWeight: "normal",
-    fontFamily: "Inter, sans-serid",
+    fontFamily: "Inter, sans-serif",
   },
   {
     name: "Caption",
     text: "Add a caption",
     fontSize: 12,
     fontWeight: "normal",
-    fontFamily: "Inter, sans-serid",
+    fontFamily: "Inter, sans-serif",
     fontStyle: "normal",
   },
 ];
