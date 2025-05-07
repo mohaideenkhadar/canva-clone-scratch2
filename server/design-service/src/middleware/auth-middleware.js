@@ -1,6 +1,6 @@
 
 const authenticatedRequest = (req, res, next) => {
-    const userId = req.headers['x-user-id'];    //Error will be clear handlers to headers
+    const userId = req.handlers['x-user-id'];    //Error will be clear handlers to headers
 
     if (!userId) {
         return res.status(401).json({
