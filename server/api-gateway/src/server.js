@@ -14,11 +14,16 @@ const corsOptions = {
       'https://resilient-gaufre-cbf0c2.netlify.app/', // your production domain
       'https://main--resilient-gaufre-cbf0c2.netlify.app'
     ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     optionsSuccessStatus: 200
   };
   
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use(helmet());
 app.use(cors());

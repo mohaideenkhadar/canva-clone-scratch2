@@ -17,12 +17,14 @@ export async function fetchWithAuth(endpoint, options = {}){
             url : `${API_URL}${endpoint}`,
             method : options.method || 'GET',
             headers : {
-                Authorization : `Bearer ${session.idToken}`,
+                'Authorization' : `Bearer ${session.idToken}`,
+                'Content-Type': 'application/json',
                 ...options.headers
             },
             data : options.body,
-            params : options.params    
-        })
+            params : options.params,
+            withCredentials: true    
+        });
 
         return response.data;
 
