@@ -10,8 +10,9 @@ const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
     origin: [
-      'http://localhost:3000', // for development
-      'https://resilient-gaufre-cbf0c2.netlify.app/' // your production domain
+    //   'http://localhost:3000', // for development
+      'https://resilient-gaufre-cbf0c2.netlify.app/', // your production domain
+      'https://main--resilient-gaufre-cbf0c2.netlify.app'
     ],
     credentials: true,
     optionsSuccessStatus: 200

@@ -2,19 +2,20 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
+    providers: [
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET,
+        authorization: {
+          params: {
+            prompt: "consent",
+            access_type: "offline",
+            response_type: "code",
+            redirect_uri: process.env.NEXTAUTH_URL + "/api/auth/callback/google"
+          }
         }
-      }
-    })
-  ],
+      })
+    ],
   secret: process.env.AUTH_SECRET,
   trustHost: true, // Required for Netlify
   cookies: {
@@ -29,6 +30,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+        // Redirect to home page after auth
+        return baseUrl;
+    },
     async jwt({ token, account }) {
       if (account?.id_token) {
         token.idToken = account.id_token;
