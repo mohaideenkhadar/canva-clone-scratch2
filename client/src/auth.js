@@ -30,9 +30,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }
   },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-        // Redirect to home page after auth
-        return baseUrl;
+    async redirect({ baseUrl }) {
+        // Use the url parameter or remove it if not needed
+        return baseUrl; // Always redirect to base URL after auth
     },
     async jwt({ token, account }) {
       if (account?.id_token) {

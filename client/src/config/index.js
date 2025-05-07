@@ -13,7 +13,7 @@ import {
 
 export const designTypes = [
   {
-    icon: <Youtube className="h-6 w-6 text-white" />,
+    icon: <Youtube className="h-6 w-6 text-white" alt="YouTube icon"/>,
     label: "YouTube Thumbnail",
     bgColor: "bg-red-500",
     width: 900,
