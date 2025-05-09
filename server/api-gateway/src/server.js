@@ -53,6 +53,27 @@ app.use(
 })
 );
 
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+app.use(
+    '/v1/designs',
+    authMiddleware,
+    createProxyMiddleware({
+      target: process.env.DESIGN,
+      changeOrigin: true,
+      pathRewrite: {
+        '^/v1': '/api' // Rewrite /v1 to /api
+      },
+      onError: (err, req, res) => {
+        res.status(500).json({
+          message: 'Internal server error',
+          error: err.message
+        });
+      }
+    })
+  );
+
+
 app.use(
     '/v1/media',
     authMiddleware,
