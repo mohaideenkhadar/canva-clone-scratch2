@@ -45,23 +45,23 @@ const proxyOptions = {
 
 // /v1/design/add -> /api/design/add
 
-app.use(
-    '/v1/designs',
-    authMiddleware,
-    proxy(process.env.DESIGN, {
-    ...proxyOptions,
-      changeOrigin: true,
-      pathRewrite: {
-        '^/v1': '/api' // Rewrite /v1 to /api
-      },
-      onError: (err, req, res) => {
-        res.status(500).json({
-          message: 'Internal server error',
-          error: err.message
-        });
-      }
-})
-);
+// app.use(
+//     '/v1/designs',
+//     authMiddleware,
+//     proxy(process.env.DESIGN, {
+//     ...proxyOptions,
+//       changeOrigin: true,
+//       pathRewrite: {
+//         '^/v1': '/api' // Rewrite /v1 to /api
+//       },
+//       onError: (err, req, res) => {
+//         res.status(500).json({
+//           message: 'Internal server error',
+//           error: err.message
+//         });
+//       }
+// })
+// );
 
 // const { createProxyMiddleware } = require('http-proxy-middleware');
 
@@ -83,6 +83,13 @@ app.use(
 //     })
 //   );
 
+app.use(
+    '/v1/designs',
+    authMiddleware,
+    proxy(process.env.DESIGN, {
+    ...proxyOptions,
+})
+);
 
 app.use(
     '/v1/media',
