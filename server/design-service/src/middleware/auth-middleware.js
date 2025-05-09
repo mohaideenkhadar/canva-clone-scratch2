@@ -1,6 +1,6 @@
-
+// design-service/src/middleware/auth-middleware.js
 const authenticatedRequest = (req, res, next) => {
-    const userId = req.headers['x-user-id'];    //Error will be clear handlers to headers
+    const userId = req.headers['x-user-id'];
 
     if (!userId) {
         return res.status(401).json({
@@ -12,6 +12,5 @@ const authenticatedRequest = (req, res, next) => {
     next();
 };
 
+// Make sure to export it this way for CommonJS
 module.exports = authenticatedRequest;
-
-// export default authenticatedRequest;

@@ -1,3 +1,4 @@
+// design-service/src/server.js
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,26 +9,31 @@ const designRoutes = require('./routes/design-routes');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Database connection
 mongoose.connect(process.env.MONGODB_URL)
-    .then(()=> console.log('Connected to MongoDB'))
-    .catch(error=> console.log('MongoDB Error',error));
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(error => console.error('MongoDB connection error:', error));
 
-    app.use(cors());
-    app.use(helmet());
-    app.use(express.json());
-    app.use(express.urlencoded({extended : true}));
-    app.use('/api/designs', designRoutes);
+// Middleware
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-    async function startServer(){
-        try{
-            app.listen(PORT, () =>
-                console.log(`DESIGN Service running on port ${PORT}`)
-        );
+// Routes
+app.use('/api/designs', designRoutes);
 
-        }catch(error){
-            console.error('Failed to connected to server', error);
-            process.exit(1);
-        }
-    }
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
+});
 
-    startServer();
+// Error handling
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+});
+
+app.listen(PORT, () => {
+    console.log(`Design Service running on port ${PORT}`);
+});
