@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 const corsOptions = {
     origin: [
     //   'http://localhost:3000', // for development
-      'https://resilient-gaufre-cbf0c2.netlify.app/', // your production domain
+      'https://resilient-gaufre-cbf0c2.netlify.app', // your production domain
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -30,16 +30,29 @@ app.use(express.json());
 app.use(express.urlencoded({extended : true}));
 
 // Proxy configuration
+// const proxyOptions = {
+//   proxyReqPathResolver: (req) => {
+//     return req.originalUrl;
+//   },
+//   proxyErrorHandler: (err, res, next) => {
+//     console.error('Proxy error:', err);
+//     res.status(500).json({
+//       message: 'Internal server error',
+//       error: err.message
+//     });
+//   }
+// };
+
+// Proxy configuration
 const proxyOptions = {
-  proxyReqPathResolver: (req) => {
-    return req.originalUrl;
+  target: '/', // Base target will be overridden per-route
+  changeOrigin: true,
+  pathRewrite: {
+    '^/v1': '/api' // Remove /v1 prefix when forwarding to services
   },
-  proxyErrorHandler: (err, res, next) => {
+  onError: (err, req, res) => {
     console.error('Proxy error:', err);
-    res.status(500).json({
-      message: 'Internal server error',
-      error: err.message
-    });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
