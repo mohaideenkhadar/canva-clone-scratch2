@@ -8,93 +8,55 @@ const authMiddleware = require('./middleware/auth-middleware');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-    origin: [
-    //   'http://localhost:3000', // for development
-      'https://resilient-gaufre-cbf0c2.netlify.app/', // your production domain
-      'https://main--resilient-gaufre-cbf0c2.netlify.app'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
-  };
-  
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
 
-//proxy options
+// Simplified proxy options
 const proxyOptions = {
-    proxyReqPathResolver : (req)=> {
-        return req.originalUrl.replace(/^\/v1/, "/api")
+    proxyReqPathResolver: (req) => {
+        return req.originalUrl;
     },
-    proxyErrorHandler : (err, res, next)=> {
+    proxyErrorHandler: (err, res, next) => {
         res.status(500).json({
-            message : 'Internal server error!',
-            error : err.message,
+            message: 'Internal server error!',
+            error: err.message,
         });
     },
 };
 
-// /v1/design/add -> /api/design/add
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
+// Proxy routes
 app.use(
     '/v1/designs',
     authMiddleware,
-    proxy(process.env.DESIGN, {
-    ...proxyOptions,
-})
+    proxy(process.env.DESIGN, proxyOptions)
 );
-
-const { createProxyMiddleware } = require('http-proxy-middleware');
-
-app.use(
-    '/v1/designs',
-    authMiddleware,
-    createProxyMiddleware({
-      target: process.env.DESIGN,
-      changeOrigin: true,
-      pathRewrite: {
-        '^/v1': '/api' // Rewrite /v1 to /api
-      },
-      onError: (err, req, res) => {
-        res.status(500).json({
-          message: 'Internal server error',
-          error: err.message
-        });
-      }
-    })
-  );
-
 
 app.use(
     '/v1/media',
     authMiddleware,
     proxy(process.env.UPLOAD, {
-    ...proxyOptions,
-    parseReqBody : false
-})
+        ...proxyOptions,
+        parseReqBody: false
+    })
 );
 
-//some extra logic we need to handle later
 app.use(
     '/v1/subscription',
     authMiddleware,
-    proxy(process.env.SUBSCRIPTION, {
-    ...proxyOptions,
-})
+    proxy(process.env.SUBSCRIPTION, proxyOptions)
 );
 
-app.listen(PORT, ()=> {
+app.listen(PORT, () => {
     console.log(`API Gateway is running on port ${PORT}`);
-    console.log(`DESIGN Service is running on port ${process.env.DESIGN}`);
-    console.log(`UPLOAD Service is running on port ${process.env.UPLOAD}`);
-    console.log(`SUBSCRIPTION Service is running on port ${process.env.SUBSCRIPTION}`);
+    console.log(`DESIGN Service URL: ${process.env.DESIGN}`);
+    console.log(`UPLOAD Service URL: ${process.env.UPLOAD}`);
+    console.log(`SUBSCRIPTION Service URL: ${process.env.SUBSCRIPTION}`);
 });

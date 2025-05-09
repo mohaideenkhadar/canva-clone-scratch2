@@ -1,6 +1,6 @@
 
 const authenticatedRequest = (req, res, next) => {
-    const userId = req.handlers['x-user-id'];    //Error will be clear handlers to headers
+    const userId = req.headers['x-user-id'];    //Error will be clear handlers to headers
 
     if (!userId) {
         return res.status(401).json({
@@ -12,4 +12,6 @@ const authenticatedRequest = (req, res, next) => {
     next();
 };
 
-export default authenticatedRequest;
+module.exports = authenticatedRequest;
+
+// export default authenticatedRequest;
