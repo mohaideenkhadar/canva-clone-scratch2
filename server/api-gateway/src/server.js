@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const proxy = require('express-http-proxy');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 const helmet = require('helmet');
 const authMiddleware = require('./middleware/auth-middleware');
@@ -22,59 +22,50 @@ const corsOptions = {
 
 // Middleware
 app.use(helmet());
-app.use(cors(corsOptions)); // Only use cors once with your configuration
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
-// Proxy Configuration
-const proxyOptions = {
-  proxyReqPathResolver: (req) => {
-    // Simple path transformation without regex
-    const path = req.originalUrl;
-    return path.startsWith('/v1') ? path.replace('/v1', '/api') : path;
-  },
-  proxyErrorHandler: (err, res, next) => {
-    console.error('Proxy error:', err);
-    res.status(500).json({
-      message: 'Internal server error!',
-      error: err.message,
-    });
-  },
-  // Add these for better proxy handling
-  preserveHostHdr: true,
-  timeout: 30000,
-  limit: '10mb'
-};
-
-// Routes
-app.use(
-  '/v1/designs',
-  authMiddleware,
-  proxy(process.env.DESIGN, proxyOptions)
-);
-
-app.use(
-  '/v1/media',
-  authMiddleware,
-  proxy(process.env.UPLOAD, {
-    ...proxyOptions,
-    parseReqBody: false
-  })
-);
-
-app.use(
-  '/v1/subscription',
-  authMiddleware,
-  proxy(process.env.SUBSCRIPTION, proxyOptions)
-);
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
+
+// Proxy Configuration
+const createServiceProxy = (serviceUrl) => {
+  return createProxyMiddleware({
+    target: serviceUrl,
+    changeOrigin: true,
+    pathRewrite: {
+      '^/v1': '/api'  // Simple string replacement
+    },
+    onError: (err, req, res) => {
+      console.error('Proxy error:', err);
+      res.status(502).json({ error: 'Bad Gateway' });
+    },
+    logger: console,
+    timeout: 30000
+  });
+};
+
+// Routes
+app.use('/v1/designs', 
+  authMiddleware,
+  createServiceProxy(process.env.DESIGN)
+);
+
+app.use('/v1/media',
+  authMiddleware,
+  createServiceProxy(process.env.UPLOAD)
+);
+
+app.use('/v1/subscription',
+  authMiddleware,
+  createServiceProxy(process.env.SUBSCRIPTION)
+);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -83,8 +74,8 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`API Gateway is running on port ${PORT}`);
-  console.log(`Design Service URL: ${process.env.DESIGN}`);
-  console.log(`Upload Service URL: ${process.env.UPLOAD}`);
-  console.log(`Subscription Service URL: ${process.env.SUBSCRIPTION}`);
+  console.log(`API Gateway running on port ${PORT}`);
+  console.log(`Design Service: ${process.env.DESIGN}`);
+  console.log(`Upload Service: ${process.env.UPLOAD}`);
+  console.log(`Subscription Service: ${process.env.SUBSCRIPTION}`);
 });
