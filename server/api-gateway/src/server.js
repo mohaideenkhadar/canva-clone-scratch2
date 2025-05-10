@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
 const cors = require('cors');
 const helmet = require('helmet');
 const authMiddleware = require('./middleware/auth-middleware');
@@ -8,7 +8,7 @@ const authMiddleware = require('./middleware/auth-middleware');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Verify environment variables
+// Service URLs with fallbacks
 const SERVICES = {
   DESIGN: process.env.DESIGN || 'https://design-service.onrender.com',
   UPLOAD: process.env.UPLOAD || 'https://upload-service-2rrl.onrender.com',
@@ -42,40 +42,47 @@ app.options('*', cors(corsOptions));
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK',
-    services: {
-      design: SERVICES.DESIGN,
-      upload: SERVICES.UPLOAD,
-      subscription: SERVICES.SUBSCRIPTION
-    }
+    services: Object.keys(SERVICES).map(service => ({
+      name: service,
+      url: SERVICES[service],
+      status: 'active'
+    }))
   });
 });
 
-// Proxy Configuration
+// Custom proxy handler that avoids path-to-regexp issues
 const createServiceProxy = (serviceUrl) => {
-  return createProxyMiddleware({
-    target: serviceUrl,
-    changeOrigin: true,
-    pathRewrite: {
-      '^/v1': '/api'  // Simple string replacement
-    },
-    onProxyReq: (proxyReq, req, res) => {
-      // Add debug headers
-      proxyReq.setHeader('X-Proxy-Target', serviceUrl);
-      proxyReq.setHeader('X-Original-Path', req.originalUrl);
-    },
-    onError: (err, req, res) => {
-      console.error('Proxy error:', err);
-      res.status(502).json({ 
-        error: 'Bad Gateway',
-        target: serviceUrl,
-        path: req.originalUrl
-      });
-    },
-    logger: console,
-    timeout: 30000,
-    secure: true, // Force HTTPS
-    xfwd: true // Forward headers
-  });
+  return (req, res, next) => {
+    // Manually rewrite the path
+    const newPath = req.originalUrl.replace(/^\/v1/, '/api');
+    const targetUrl = new URL(newPath, serviceUrl).toString();
+    
+    // Create a one-time proxy middleware
+    const proxy = createProxyMiddleware({
+      target: serviceUrl,
+      changeOrigin: true,
+      pathRewrite: (path) => {
+        // Simple string replacement without regex
+        return path.startsWith('/v1') ? path.replace('/v1', '/api') : path;
+      },
+      onProxyReq: fixRequestBody,
+      onError: (err, req, res) => {
+        console.error('Proxy error:', err);
+        res.status(502).json({ 
+          error: 'Bad Gateway',
+          target: serviceUrl,
+          path: req.originalUrl
+        });
+      },
+      logger: console,
+      timeout: 30000,
+      secure: true,
+      xfwd: true
+    });
+    
+    // Execute the proxy
+    proxy(req, res, next);
+  };
 };
 
 // Routes
